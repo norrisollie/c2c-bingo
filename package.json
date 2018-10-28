@@ -1,0 +1,22 @@
+{
+  "name": "c2c-bingo",
+  "version": "1.0.0",
+  "description": "A small node app that searchs a specified Twitter account and counts how many times certain words get mentioned. If all words are mentioned, then BINGO!",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/norrisollie/c2c-bingo.git"
+  },
+  "author": "Ollie Norris",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/norrisollie/c2c-bingo/issues"
+  },
+  "homepage": "https://github.com/norrisollie/c2c-bingo#readme",
+  "dependencies": {
+    "twitter": "^1.7.1"
+  }
+}
