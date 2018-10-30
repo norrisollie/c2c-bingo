@@ -2,6 +2,7 @@
 
 const Twitter = require('twitter');
 const config = require('./config.js');
+// const dateSuffix = require('./datesuffix.js');
 const T = new Twitter(config);
 
 // use arguments to choose what twitter account to look at
@@ -21,158 +22,98 @@ let problemArray = [];
 T.get('statuses/user_timeline', params, (error, tweets, response) => {
 
 
-    const searchArray = ["train fault", "points failure", "signal failure", "cancelled", "delayed", "will no longer call at", "problem currently under investigation"];
+    if (!error) {
 
-    const daysObject = {
+        // search array contains the keywords to look for in the tweets
+        const problemArray = ["train fault", "points failure", "signal failure", "cancelled", "delayed", "will no longer call at", "problem currently under investigation"];
 
-        "Mon": "Monday",
-        "Tue": "Tuesday",
-        "Wed": "Wednesday",
-        "Thu": "Thursday",
-        "Fri": "Friday",
-        "Sat": "Saturday",
-        "Sun": "Sunday"
-    };
+        // object with properties for the count for each words
+        let countObject = {
+            totalTweets: 0,
+            trainFault: 0,
+            pointsFailure: 0,
+            signalFailure: 0,
+            cancelled: 0,
+            delayed: 0,
+            willNoLongerCallAt: 0,
+            problemCurrentlyUnderInvestigation: 0,
+            noProblem: 0
+        }
 
-    const monthObject = {
+        // loop through all of the tweets from the user's timeline to search for tweets containing the keywords
+        for (let tweet of tweets) {
 
-        "Jan": "January",
-        "Feb": "February",
-        "Mar": "March",
-        "Apr": "April",
-        "May": "May",
-        "Jun": "June",
-        "Jul": "July",
-        "Aug": "August",
-        "Sep": "September",
-        "Oct": "October",
-        "Nov": "November",
-        "Dec": "December"
-    };
+            // increment totalTweets counter
+            countObject.totalTweets++
 
-    const dateObject = {
+            // get the contents of the tweet
+            let theTweets = tweet.full_text;
+            // get the date of the tweet and split by date
+            let theTweetDate = tweet.created_at.split(" ");
 
-        "0": "th",
-        "1": "st",
-        "2": "nd",
-        "3": "rd",
-        "4": "th",
-        "5": "th",
-        "6": "th",
-        "7": "th",
-        "8": "th",
-        "9": "th"
-    };
+            // iterate through the problems array
+            for (let problem of problemArray) {
 
-    let count = 1
-    let trainFault_count = 0;
-    let pointsFailure_count = 0;
-    let signalFailure_count = 0;
-    let cancelled_count = 0;
-    let delayed_count = 0;
-    let willNoLongerCallAt_count = 0;
-    let problemCurrentlyUnderInvestigation_count = 0;
+                // only tweets that contain one or more of the problem strings can increase the count
+                if (theTweets.includes(problem)) {
 
-    for (let tweet of tweets) {
+                    // switch statement to increment counter
+                    switch (problem) {
 
-        let theTweets = tweet.full_text;
-        let theTweetDate = tweet.created_at.split(" ");
+                        // if train fault
+                        case "train fault":
+                            countObject.trainFault++
+                            break;
+                        // if points failure
+                        case "points failure":
+                            countObject.pointsFailure++
+                            break;
+                        // if signal failure
+                        case "signal failure":
+                            countObject.signalFailure++
+                            break;
+                        // if cancelled
+                        case "cancelled":
+                            countObject.cancelled++
+                            break;
+                        // if delayed
+                        case "delayed":
+                            countObject.delayed++
+                            break;
+                        // if will no longer call at
+                        case "will no longer call at":
+                            countObject.willNoLongerCallAt++
+                            break;
+                        // if problem currently under investigation
+                        case "problem currently under investigation":
+                            countObject.willNoLongerCallAt++
+                            break;
+                    }
 
-        for (let problem of searchArray) {
+                } else {
 
-            if (theTweets.includes(problem)) {
-
-                switch (problem) {
-
-                    case "train fault":
-                        trainFault_count++
-                        break;
-
-                    case "points failure":
-                        pointsFailure_count++
-                        break;
-
-                    case "signal failure":
-                        signalFailure_count++
-                        break;
-
-                    case "cancelled":
-                        cancelled_count++
-                        break;
-
-                    case "delayed":
-                        delayed_count++
-                        break;
-
-                    case "will no longer call at":
-                        willNoLongerCallAt_count++
-                        break;
-                    case "problem currently under investigation":
-                        willNoLongerCallAt_count++
-                        break;
-
+                    // increment if the tweet contains none of the entries
+                    countObject.noProblem++
                 }
-
-                // console.log("found a reference to '" + problem + "' in the tweet: " + theTweets)
-                // console.log("
-                //╔═══════════════════╤══════════════════════╤══════════════════════════════╗
-                //║                   │                      │                              ║ 
-                //║    " + train_fault + "    │    points failure    │        signal failure        ║
-                //║                   │                      │                              ║
-                //╟───────────────────┼──────────────────────┼──────────────────────────────╢
-                //║                   │                      │                              ║
-                //║     cancelled     │        delayed       │    will no longer call at    ║
-                //║                   │                      │                              ║
-                //╚═══════════════════╧══════════════════════╧══════════════════════════════╝")
-                // let issueTweet = "found a reference to '" + problem + "' in the tweet: " + theTweets
-
-                // problemArray.push(issueTweet)
-
-            } else {
-                // console.log("found no reference to '" + problem + "' in the tweet: " + theTweets)
             }
         }
 
-        let day = theTweetDate[0];
-        let month = theTweetDate[1];
-        let date = theTweetDate[2]
-        let dateTest = theTweetDate[2].split("");
-        // let time = theTweetDate[3].split(":");
-        let time = theTweetDate[3]
-        let hour = time[0]
-        let minute = time[1]
-        let second = time[2]
-
-        for (let key in daysObject) {
-            if (key === day) {
-                day = daysObject[key]
-            }
+        // if all problem counts have a value of 1 or more, BINGO!
+        if(countObject.trainFault >=1 && countObject.pointsFailure >=1 && countObject.signalFailure >=1 && countObject.cancelled >=1 && countObject.delayed >=1 && countObject.willNoLongerCallAt >=1 && countObject.willNoLongerCallAt) {
+            console.log("\noOoOOoOOo       o.oOOOo.  ooOoOOo o.     O  .oOOOo.   .oOOOo.\n     o     o     O    Oo     o .O     o  .O     o\n     O     O     o    O O    O o         O       \n     oOooOO.     O    O  o   o O         o       \n     o     `O    o    O   o  O O   .oOOo O       \n     O      o    O    o    O O o.      O o       \n     o     .O    O    o     Oo  O.    oO `o     O\n     `OooOO'  ooOOoOo O     `o   `OooO'   `OoooO' \n")
+        } else {
+            console.log("\no.     O  .oOOOo.  oOoOOoOOo       o.oOOOo.  ooOoOOo o.     O  .oOOOo.   .oOOOo. \nOo     o .O     o.     o            o     o     O    Oo     o .O     o  .O     o.\nO O    O O       o     o            O     O     o    O O    O o         O       o\nO  o   o o       O     O            oOooOO.     O    O  o   o O         o       O\nO   o  O O       o     o            o     `O    o    O   o  O O   .oOOo O       o\no    O O o       O     O            O      o    O    o    O O o.      O o       O\no     Oo `o     O'     O            o     .O    O    o     Oo  O.    oO `o     O'\nO     `o  `OoooO'      o'           `OooOO'  ooOOoOo O     `o   `OooO'   `OoooO' \n");
         }
 
-        for (let key in dateObject) {
-            if (key === dateTest[1]) {
-                date = date + dateObject[key];
-            }
-        }
+            console.log("'Train Fault' mentioned " + countObject.trainFault + " times.")
+            console.log("'Points Failure' mentioned " + countObject.pointsFailure + " times.")
+            console.log("'Signal Failure' mentioned " + countObject.signalFailure + " times.")
+            console.log("'Cancelled' mentioned " + countObject.cancelled + " times.")
+            console.log("'Delayed' mentioned " + countObject.delayed + " times.")
+            console.log("'Will No Longer Call At' mentioned " + countObject.willNoLongerCallAt + " times.")
+            console.log("'Problem Currently Under Investigation' mentioned " + countObject.problemCurrentlyUnderInvestigation + " times.")
 
-        for (let key in monthObject) {
-            if (key === month) {
-                month = monthObject[key];
-            }
-        }
-
-        // console.log(count + ". " + theTweets + " | Tweeted on " + day + " the " + date + " of " + month + " at " + time);
-
-        count++
-
+    } else {
+        console.log("Something's wrong...")
     }
-
-
-    if (trainFault_count >= 1 && pointsFailure_count >= 1 && signalFailure_count >= 1 && cancelled_count >= 1 && delayed_count >= 1 && willNoLongerCallAt_count && problemCurrentlyUnderInvestigation_count >=1) {
-        console.log("\noooooooooo.  ooooo ooooo      ooo   .oooooo.      .oooooo.   .o.\n`888'   `Y8b `888' `888b.     `8'  d8P'  `Y8b    d8P'  `Y8b  888\n 888     888  888   8 `88b.    8  888           888      888 888\n 888oooo888'  888   8   `88b.  8  888           888      888 Y8P\n 888    `88b  888   8     `88b.8  888     ooooo 888      888 `8'\n 888    .88P  888   8       `888  `88.    .88'  `88b    d88' .o.\no888bood8P'  o888o o8o        `8   `Y8bood8P'    `Y8bood8P'  Y8P\n");
-    } else {}
-    console.log("You searched for Tweets on @" + toc_twitter);
-    console.log("Out of " + count + " tweets posted, not containing any replies or retweets...");
-    console.log("'train fault' mentioned " + trainFault_count + " times. " + "\n'points failure' mentioned " + pointsFailure_count + " times. " + "\n'signal failure' mentioned " + signalFailure_count + " times. " + "\n'cancelled' mentioned " + cancelled_count + " times. " + "\n'delayed' mentioned " + delayed_count + " times. " + "\n'will no longer call at' mentioned " + willNoLongerCallAt_count + " times." + "\n'problem currently under investigation' mentioned " + problemCurrentlyUnderInvestigation_count + " times.");
-
 });
